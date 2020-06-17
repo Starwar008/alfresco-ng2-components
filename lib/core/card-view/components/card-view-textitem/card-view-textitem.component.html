@@ -14,6 +14,7 @@
                    class="adf-property-value"
                    [placeholder]="property.default"
                    [(ngModel)]="editedValue"
+                   (keydown)="valueChanges.next($event?.target?.value)"
                    (blur)="update()"
                    (keydown.enter)="update()"
                    [disabled]="!isEditable"
@@ -27,6 +28,7 @@
                       matTextareaAutosize
                       matAutosizeMaxRows="1"
                       matAutosizeMaxRows="5"
+                      (keydown)="valueChanges.next($event.target?.value)"
                       class="adf-property-value"
                       [placeholder]="property.default"
                       [(ngModel)]="editedValue"
@@ -40,7 +42,7 @@
                     *ngIf="isEditable"
                     mat-icon-button
                     aria-label="Clear"
-                    (click)="editedValue=''">
+                    (click)="editedValue='' && update()">
                 <mat-icon>cancel</mat-icon>
             </button>
             <mat-icon matSuffix

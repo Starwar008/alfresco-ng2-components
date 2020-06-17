@@ -15,13 +15,15 @@
  * limitations under the License.
  */
 
-import { Component, Input, OnChanges } from '@angular/core';
+import { AfterViewInit, Component, Input, OnChanges, OnDestroy } from '@angular/core';
 import { CardViewTextItemModel } from '../../models/card-view-textitem.model';
 import { CardViewUpdateService } from '../../services/card-view-update.service';
 import { BaseCardView } from '../base-card-view';
 import { MatChipInputEvent } from '@angular/material';
 import { ClipboardService } from '../../../clipboard/clipboard.service';
 import { TranslationService } from '../../../services/translation.service';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, takeUntil } from 'rxjs/operators';
 
 export const DEFAULT_SEPARATOR = ', ';
 const templateTypes = {
@@ -37,7 +39,7 @@ const templateTypes = {
     templateUrl: './card-view-textitem.component.html',
     styleUrls: ['./card-view-textitem.component.scss']
 })
-export class CardViewTextItemComponent extends BaseCardView<CardViewTextItemModel> implements OnChanges {
+export class CardViewTextItemComponent extends BaseCardView<CardViewTextItemModel> implements OnChanges, AfterViewInit, OnDestroy {
 
     @Input()
     editable: boolean = false;
@@ -57,6 +59,7 @@ export class CardViewTextItemComponent extends BaseCardView<CardViewTextItemMode
     editedValue: string | string[];
     errorMessages: string[];
     templateType: string;
+    valueChanges = new Subject<string>();
 
     constructor(cardViewUpdateService: CardViewUpdateService,
                 private clipboardService: ClipboardService,
@@ -67,6 +70,15 @@ export class CardViewTextItemComponent extends BaseCardView<CardViewTextItemMode
     ngOnChanges(): void {
         this.resetValue();
         this.setTemplateType();
+    }
+
+    ngAfterViewInit(): void {
+        this.valueChanges.pipe(
+                debounceTime(300),
+                distinctUntilChanged(),
+                filter(() => !!this.property),
+                takeUntil(this.destroy$)
+        ).subscribe(this.update.bind(this));
     }
 
     private setTemplateType() {
