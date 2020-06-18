@@ -23,7 +23,7 @@ import { MatChipInputEvent } from '@angular/material';
 import { ClipboardService } from '../../../clipboard/clipboard.service';
 import { TranslationService } from '../../../services/translation.service';
 import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter, takeUntil } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 export const DEFAULT_SEPARATOR = ', ';
 const templateTypes = {
@@ -74,11 +74,15 @@ export class CardViewTextItemComponent extends BaseCardView<CardViewTextItemMode
 
     ngAfterViewInit(): void {
         this.valueChanges.pipe(
-                debounceTime(300),
-                distinctUntilChanged(),
-                filter(() => !!this.property),
-                takeUntil(this.destroy$)
+            debounceTime(300),
+            distinctUntilChanged(),
+            takeUntil(this.destroy$)
         ).subscribe(this.update.bind(this));
+    }
+
+    ngOnDestroy(): void {
+        super.ngOnDestroy();
+        this.valueChanges.complete();
     }
 
     private setTemplateType() {
